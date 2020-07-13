@@ -2,7 +2,7 @@
 
 var tflite = tflite || {};
 var base = base || require('./base');
-var flatbuffers = flatbuffers || require('flatbuffers').flatbuffers;
+var flatbuffers = flatbuffers || require('./flatbuffers');
 var long = long || { Long: require('long') };
 
 tflite.ModelFactory = class {
@@ -26,20 +26,19 @@ tflite.ModelFactory = class {
     }
 
     open(context, host) {
-        return host.require('./tflite-schema').then((schema) => {
-            tflite.schema = schema.tflite_schema;
-            tflite.metadata_schema = schema.tflite_metadata_schema;
+        return host.require('./tflite-schema').then(() => {
+            tflite.schema = flatbuffers.get('tflite').tflite;
             return tflite.Metadata.open(host).then((metadata) => {
                 const identifier = context.identifier;
                 try {
                     const extension = identifier.split('.').pop().toLowerCase();
                     switch (extension) {
                         default: {
-                            const buffer = new flatbuffers.ByteBuffer(context.buffer);
-                            if (!tflite.schema.Model.bufferHasIdentifier(buffer)) {
+                            const reader = new flatbuffers.Reader(context.buffer);
+                            if (!tflite.schema.Model.identifier(reader)) {
                                 throw new tflite.Error("File format is not tflite.Model.");
                             }
-                            const model = tflite.schema.Model.getRootAsModel(buffer);
+                            const model = tflite.schema.Model.create(reader);
                             return new tflite.Model(metadata, null, model);
                         }
                         case 'json': {
@@ -64,62 +63,55 @@ tflite.Model = class {
         this._format = 'TensorFlow Lite';
         switch (format) {
             default: {
-                this._format = this._format + ' v' + model.version().toString();
-                this._description = model.description() || '';
+                this._format = this._format + ' v' + model.version.toString();
+                this._description = model.description || '';
                 const operators = [];
                 const builtinOperatorMap = {};
                 for (const key of Object.keys(tflite.schema.BuiltinOperator)) {
                     const index = tflite.schema.BuiltinOperator[key];
                     builtinOperatorMap[index] = tflite.Utility.type(key);
                 }
-                for (let i = 0; i < model.operatorCodesLength(); i++) {
-                    const operatorCode = model.operatorCodes(i);
-                    const code = operatorCode.builtinCode();
-                    const version = operatorCode.version();
+                const operator_codes = model.operator_codes;
+                for (let i = 0; i < operator_codes.length; i++) {
+                    const operatorCode = operator_codes[i];
+                    const code = operatorCode.builtin_code;
+                    const version = operatorCode.version;
                     const custom = code === tflite.schema.BuiltinOperator.CUSTOM;
-                    const name = custom ? operatorCode.customCode() : builtinOperatorMap[code];
+                    const name = custom ? operatorCode.custom_code : builtinOperatorMap[code];
                     if (!name) {
                         throw new tflite.Error("Invalid built-in code '" + code.toString() + "' at '" + i.toString() + "'.");
                     }
                     operators.push(custom ? { name: name, version: version, custom: true } : { name: name, version: version });
                 }
-                /*
-                for (let i = 0; i < model.metadataBufferLength(); i++) {
-                    const metadataBufferIndex = model.metadataBuffer(i);
-                    const data = model.buffers(metadataBufferIndex).dataArray();
-                    // file_identifier "FDMD"
-                    // file_identifier "MSMD"
-                    // file_identifier "SEMD"
-                }
-                */
                 let modelMetadata = null;
-                for (let i = 0; i < model.metadataLength(); i++) {
-                    const metadata = model.metadata(i);
-                    switch (metadata.name()) {
+                const metadata = model.metadata;
+                for (const data of metadata) {
+                    switch (data.name()) {
                         case 'min_runtime_version': {
-                            const data = model.buffers(metadata.buffer()).dataArray();
-                            this._runtime = data ? new TextDecoder().decode(data) : undefined;
+                            const buffer = model.buffers(data.buffer()).dataArray();
+                            this._runtime = buffer ? new TextDecoder().decode(buffer) : undefined;
                             break;
                         }
                         case 'TFLITE_METADATA': {
-                            const buffer = new flatbuffers.ByteBuffer(model.buffers(metadata.buffer()).dataArray() || []);
-                            if (tflite.metadata_schema.ModelMetadata.bufferHasIdentifier(buffer)) {
-                                modelMetadata = tflite.metadata_schema.ModelMetadata.getRootAsModelMetadata(buffer);
-                                this._name = modelMetadata.name() || '';
-                                this._version = modelMetadata.version() || '';
-                                this._description = modelMetadata.description() ? [ this.description, modelMetadata.description()].join(' ') : this._description;
-                                this._author = modelMetadata.author() || '';
-                                this._license = modelMetadata.license() || '';
+                            const reader = new flatbuffers.Reader(model.buffers(data.buffer()).dataArray() || []);
+                            if (tflite.schema.ModelMetadata.identifier(reader)) {
+                                modelMetadata = tflite.schema.ModelMetadata.create(reader);
+                                this._name = modelMetadata.name || '';
+                                this._version = modelMetadata.version || '';
+                                this._description = modelMetadata.description ? [ this.description, modelMetadata.description].join(' ') : this._description;
+                                this._author = modelMetadata.author || '';
+                                this._license = modelMetadata.license || '';
                             }
                             break;
                         }
                     }
                 }
-                const subgraphsLength = model.subgraphsLength();
-                for (let i = 0; i < subgraphsLength; i++) {
-                    const subgraph = model.subgraphs(i);
-                    const name = subgraphsLength > 1 ? i.toString() : '';
-                    const subgraphMetadata = modelMetadata && i < modelMetadata.subgraphMetadataLength() ? modelMetadata.subgraphMetadata(i) : null;
+                const subgraphs = model.subgraphs;
+                const subgraphsMetadata = modelMetadata ? modelMetadata.subgraphMetadata : null;
+                for (let i = 0; i < subgraphs.length; i++) {
+                    const subgraph = subgraphs[i];
+                    const name = subgraphs.length > 1 ? i.toString() : '';
+                    const subgraphMetadata = subgraphsMetadata && i < subgraphsMetadata.length ? subgraphsMetadata[i] : null;
                     this._graphs.push(new tflite.Graph(metadata, format, subgraph, subgraphMetadata, name, operators, model));
                 }
                 break;
@@ -195,14 +187,17 @@ tflite.Graph = class {
         this._outputs = [];
         switch (format) {
             default: {
-                this._name = subgraph.name() || name;
+                this._name = subgraph.name || name;
                 const args = [];
                 const tensorNames = [];
-                for (let i = 0; i < subgraph.tensorsLength(); i++) {
-                    const tensor = subgraph.tensors(i);
-                    const buffer = model.buffers(tensor.buffer());
-                    const is_variable = tensor.isVariable();
-                    const initializer = buffer.dataLength() > 0 || is_variable ? new tflite.Tensor(format, i, tensor, buffer, is_variable) : null;
+                const tensors = subgraph.tensors;
+                const buffers = model.buffers;
+                for (let i = 0; i < tensors.length; i++) {
+                    const tensor = tensors[i];
+                    const buffer = buffers[tensor.buffer];
+                    const is_variable = tensor.is_variable;
+                    const data = buffer.data;
+                    const initializer = data.length > 0 || is_variable ? new tflite.Tensor(format, i, tensor, buffer, is_variable) : null;
                     args.push(new tflite.Argument(format, i, tensor, initializer));
                     tensorNames.push(tensor.name());
                 }
@@ -228,7 +223,7 @@ tflite.Graph = class {
                                 }
                                 case 2: {
                                     denotation = 'Image';
-                                    const imageProperties = content.contentProperties(Reflect.construct(tflite.metadata_schema.ImageProperties, []));
+                                    const imageProperties = content.contentProperties(Reflect.construct(tflite.schema.ImageProperties, []));
                                     switch(imageProperties.colorSpace()) {
                                         case 1: denotation += '(RGB)'; break;
                                         case 2: denotation += '(Grayscale)'; break;
