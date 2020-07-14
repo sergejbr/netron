@@ -25,14 +25,9 @@ Netron has experimental support for **TorchScript** (`.pt`, `.pth`), **PyTorch**
 
 Sample model files to download or open using the browser version:
 
- * **ONNX**: [squeezenet](https://raw.githubusercontent.com/onnx/tutorials/master/tutorials/assets/squeezenet.onnx) [[open](https://lutzroeder.github.io/netron?url=https://raw.githubusercontent.com/onnx/tutorials/master/tutorials/assets/squeezenet.onnx)]
- * **CoreML**: [exermote](https://raw.githubusercontent.com/Lausbert/Exermote/master/ExermoteInference/ExermoteCoreML/ExermoteCoreML/Model/Exermote.mlmodel) [[open](https://lutzroeder.github.io/netron?url=https://raw.githubusercontent.com/Lausbert/Exermote/master/ExermoteInference/ExermoteCoreML/ExermoteCoreML/Model/Exermote.mlmodel)]
- * **Darknet**: [yolo](https://raw.githubusercontent.com/AlexeyAB/darknet/master/cfg/yolo.cfg) [[open](https://lutzroeder.github.io/netron?url=https://raw.githubusercontent.com/AlexeyAB/darknet/master/cfg/yolo.cfg)]
- * **Keras**: [mobilenet](https://raw.githubusercontent.com/aio-libs/aiohttp-demos/master/demos/imagetagger/tests/data/mobilenet.h5) [[open](https://lutzroeder.github.io/netron?url=https://raw.githubusercontent.com/aio-libs/aiohttp-demos/master/demos/imagetagger/tests/data/mobilenet.h5)]
- * **MXNet**: [inception_v3](https://raw.githubusercontent.com/soeaver/mxnet-model/master/cls/inception/inception_v3-symbol.json) [[open](https://lutzroeder.github.io/netron?url=https://raw.githubusercontent.com/soeaver/mxnet-model/master/cls/inception/inception_v3-symbol.json)]
- * **TensorFlow**: [chessbot](https://raw.githubusercontent.com/srom/chessbot/master/model/chessbot.pb) [[open](https://lutzroeder.github.io/netron?url=https://raw.githubusercontent.com/srom/chessbot/master/model/chessbot.pb)]
- * **TensorFlow Lite**: [hair_segmentation](https://raw.githubusercontent.com/google/mediapipe/master/mediapipe/models/hair_segmentation.tflite) [[open](https://lutzroeder.github.io/netron?url=https://raw.githubusercontent.com/google/mediapipe/master/mediapipe/models/hair_segmentation.tflite)]
- * **TorchScript**: [traced_online_pred_layer](https://raw.githubusercontent.com/ApolloAuto/apollo/master/modules/prediction/data/traced_online_pred_layer.pt) [[open](https://lutzroeder.github.io/netron?url=https://raw.githubusercontent.com/ApolloAuto/apollo/master/modules/prediction/data/traced_online_pred_layer.pt)]
- * **Caffe**: [mobilenet_v2](https://raw.githubusercontent.com/shicai/MobileNet-Caffe/master/mobilenet_v2.caffemodel) [[open](https://lutzroeder.github.io/netron?url=https://raw.githubusercontent.com/shicai/MobileNet-Caffe/master/mobilenet_v2.caffemodel)]
- * **TensorFlow Lite**: [mobilenet_v2]  [[open](https://lutzroeder.github.io/netron?url=https://github.com/sergejbr/netron/blob/master/models/CifarNetBeladung/Optimizer_none.tflite)]
+* **TensorFlow Lite**: [CifarNet](https://github.com/sergejbr/netron/blob/master/models/CifarNet/Optimizer_none.tflite)[[open](https://lutzroeder.github.io/netron?url=https://github.com/sergejbr/netron/blob/master/models/CifarNet/Optimizer_none.tflite)]
+
+* **TensorFlow Lite**: [MobileNetV2](https://github.com/sergejbr/netron/blob/master/models/MobileNetV2/Optimizer_none.tflite)[[open](https://lutzroeder.github.io/netron?url=https://github.com/sergejbr/netron/blob/master/models/MobileNetV2/Optimizer_none.tflite)]
+
+* **TensorFlow Lite**: [InceptionV3](https://github.com/sergejbr/netron/blob/master/models/InceptionV3/Optimizer_none.tflite)[[open](https://lutzroeder.github.io/netron?url=https://github.com/sergejbr/netron/blob/master/models/InceptionV3/Optimizer_none.tflite)]
 
